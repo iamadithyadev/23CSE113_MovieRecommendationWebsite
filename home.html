@@ -24,29 +24,45 @@
           <button class="nav-link-btn" onclick="location.href='favourites.html'">Fav</button>
           <button class="nav-link-btn" onclick="location.href='contact.html'">Contact</button>
           <button class="nav-link-btn" onclick="location.href='about.html'">About</button>
-          <button id="adminNavBtn" class="nav-link-btn admin-btn" style="display:none;" onclick="location.href='admin.html'">Admin</button>
+          <button id="adminNavBtn" class="nav-link-btn admin-btn" style="display:none;" onclick="showAdminPanel()">Admin</button>
           <button class="nav-exit-btn" onclick="logout()">Logout</button>
         </div>
       </div>
     </nav>
     <div id="mainContent"></div>
-    <footer class="site-footer">
-      <div class="container">
-        <div class="footer-main">
-          <div><span class="nav-logo" style="font-size:28px;"><span style="color:var(--red);">Movie</span>Vault</span><p style="color:var(--gray); font-size:12px; margin-top:10px;">Indian Cinema Discovery Platform</p></div>
-          <div><h4 style="color:var(--gray); font-size:11px; margin-bottom:14px;">NAVIGATE</h4><a class="footer-link" onclick="location.href='home.html'">Home</a><a class="footer-link" onclick="location.href='genres.html'">Genres</a><a class="footer-link" onclick="location.href='favourites.html'">Favorites</a></div>
-          <div><h4 style="color:var(--gray); font-size:11px; margin-bottom:14px;">CINEMA</h4><span class="footer-link">Bollywood</span><span class="footer-link">Tollywood</span><span class="footer-link">Kollywood</span><span class="footer-link">Mollywood</span></div>
-        </div>
-        <div class="footer-bottom"><p>© 2025 MovieVault · Made with ❤️</p><p>Powered by TMDb API</p></div>
-      </div>
-    </footer>
+    <footer class="site-footer">...</footer>
   </div>
+
+  <!-- Movie Detail Modal (vanilla) -->
   <div id="movieModal" class="vanilla-modal">
     <div class="vanilla-modal-content">
-      <div class="vanilla-modal-header"><button class="vanilla-modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="vanilla-modal-header"><button class="vanilla-modal-close" onclick="closeModal('movieModal')">&times;</button></div>
       <div class="vanilla-modal-body" id="modalBody"><div class="loader"></div></div>
     </div>
   </div>
+
+  <!-- Admin Modal (vanilla) -->
+  <div id="adminModal" class="vanilla-modal">
+    <div class="vanilla-modal-content">
+      <div class="vanilla-modal-header"><button class="vanilla-modal-close" onclick="closeModal('adminModal')">&times;</button></div>
+      <div class="vanilla-modal-body">
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" id="toggleTrending" checked>
+          <label class="form-check-label">🔥 Show Trending Section</label>
+        </div>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" id="toggleTopRated" checked>
+          <label class="form-check-label">⭐ Show Top Rated Section</label>
+        </div>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" id="toggleUpcoming" checked>
+          <label class="form-check-label">📅 Show Upcoming Section</label>
+        </div>
+        <button class="btn-red w-100" onclick="applyAdminSettings()">Apply & Refresh Home</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
   <script>
     window.onload = function() {
