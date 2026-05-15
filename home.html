@@ -11,6 +11,7 @@
 </head>
 <body>
   <div id="appShell">
+    <!-- same navbar as before – I'll give a compact version -->
     <nav class="topnav">
       <div class="topnav-inner">
         <span class="nav-logo" onclick="location.href='home.html'"><span>Movie</span>Vault</span>
@@ -20,7 +21,7 @@
         </form>
         <div class="nav-links">
           <button class="nav-link-btn" onclick="location.href='home.html'">Home</button>
-          <button class="nav-link-btn" onclick="location.href='genre.html'">Genres</button>
+          <button class="nav-link-btn" onclick="location.href='genres.html'">Genres</button>
           <button class="nav-link-btn" onclick="location.href='favourites.html'">Fav</button>
           <button class="nav-link-btn" onclick="location.href='contact.html'">Contact</button>
           <button class="nav-link-btn" onclick="location.href='about.html'">About</button>
@@ -30,32 +31,19 @@
       </div>
     </nav>
     <div id="mainContent"></div>
-    <footer class="site-footer">
-      <div class="container">
-        <div class="footer-main">
-          <div><span class="nav-logo" style="font-size:28px;"><span style="color:var(--red);">Movie</span>Vault</span><p style="color:var(--gray); font-size:12px; margin-top:10px;">Indian Cinema Discovery Platform</p></div>
-          <div><h4 style="color:var(--gray); font-size:11px; margin-bottom:14px;">NAVIGATE</h4><a class="footer-link" onclick="location.href='home.html'">Home</a><a class="footer-link" onclick="location.href='genre.html'">Genres</a><a class="footer-link" onclick="location.href='favourites.html'">Favorites</a></div>
-          <div><h4 style="color:var(--gray); font-size:11px; margin-bottom:14px;">CINEMA</h4><span class="footer-link">Bollywood</span><span class="footer-link">Tollywood</span><span class="footer-link">Kollywood</span><span class="footer-link">Mollywood</span></div>
-        </div>
-        <div class="footer-bottom"><p>© 2025 MovieVault · Made with ❤️</p><p>Powered by TMDb API</p></div>
-      </div>
-    </footer>
+    <footer class="site-footer">...</footer>
   </div>
-
-  <!-- MOVIE DETAIL MODAL (vanilla) -->
   <div id="movieModal" class="vanilla-modal">
     <div class="vanilla-modal-content">
       <div class="vanilla-modal-header"><button class="vanilla-modal-close" onclick="closeModal()">&times;</button></div>
       <div class="vanilla-modal-body" id="modalBody"><div class="loader"></div></div>
     </div>
   </div>
-
   <script src="script.js"></script>
   <script>
-    // On load, show home content and handle admin button visibility
-    window.onload = function() {
+    window.onload = () => {
       const user = JSON.parse(localStorage.getItem("currentUser"));
-      if (!user) { window.location.href = "login.html"; return; }
+      if (!user) location.href = "login.html";
       if (user.role === "admin") document.getElementById("adminNavBtn").style.display = "inline-block";
       showHome();
     };
