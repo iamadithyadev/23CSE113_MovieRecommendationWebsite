@@ -4,6 +4,7 @@ const API_URL = "https://api.themoviedb.org/3";
 const IMG_URL = "https://image.tmdb.org/t/p/w300";
 const PLACEHOLDER = "https://placehold.co/300x450/151515/888?text=No+Image";
 
+
 let currentUser = null;
 let favorites = [];
 let genreList = [];
@@ -13,10 +14,12 @@ let adminSettings = {
   showUpcoming: true
 };
 
+
 const fallbackGenres = [
   { id: 28, name: "Action" }, { id: 35, name: "Comedy" }, { id: 27, name: "Horror" },
   { id: 18, name: "Drama" }, { id: 10749, name: "Romance" }, { id: 878, name: "Sci-Fi" }
 ];
+
 
 // ==================== HELPER FUNCTIONS ====================
 async function fetchData(endpoint, params = {}) {
@@ -30,26 +33,26 @@ async function fetchData(endpoint, params = {}) {
   }
 }
 
+
 function getElement(id) { return document.getElementById(id); }
 function showLoader() { return '<div class="loader"></div>'; }
 function getPoster(path) { return path ? IMG_URL + path : PLACEHOLDER; }
 function getYear(date) { return date ? date.slice(0,4) : "—"; }
 function getRating(vote) { return vote ? vote.toFixed(1) : "N/A"; }
 
+
 // ==================== MODAL CONTROLS (Vanilla) ====================
-function openModal(modalId) {
-  document.getElementById(modalId).style.display = 'flex';
+function openModal() {
+  document.getElementById('movieModal').style.display = 'flex';
 }
-function closeModal(modalId) {
-  document.getElementById(modalId).style.display = 'none';
+function closeModal() {
+  document.getElementById('movieModal').style.display = 'none';
 }
-// Close modals when clicking outside
 window.onclick = function(event) {
-  const movieModal = document.getElementById('movieModal');
-  const adminModal = document.getElementById('adminModal');
-  if (event.target === movieModal) closeModal('movieModal');
-  if (event.target === adminModal) closeModal('adminModal');
+  const modal = document.getElementById('movieModal');
+  if (event.target === modal) closeModal();
 }
+
 
 // ==================== AUTHENTICATION ====================
 function getUsers() {
@@ -62,6 +65,7 @@ function getUsers() {
   return JSON.parse(localStorage.users);
 }
 
+
 function switchTab(tab) {
   const isLogin = tab === "login";
   getElement("divLogin").style.display = isLogin ? "block" : "none";
@@ -70,15 +74,18 @@ function switchTab(tab) {
   getElement("tabS").className = "tab-btn" + (!isLogin ? " active" : "");
 }
 
+
 function doLogin() {
   const username = getElement("lUser").value;
   const password = getElement("lPass").value;
   const users = getUsers();
 
+
   if (!users[username] || users[username].password !== password) {
     alert("Invalid username or password");
     return;
   }
+
 
   currentUser = { name: username, role: users[username].role };
   localStorage.setItem("currentUser", JSON.stringify(currentUser));
@@ -89,13 +96,18 @@ function doLogin() {
     if (saved) adminSettings = JSON.parse(saved);
   }
 
-  window.location.href = "home.html";
+
+  getElement("loginPage").style.display = "none";
+  getElement("appShell").style.display = "block";
+  startApp();
 }
+
 
 function doSignup() {
   const newUser = getElement("sUser").value.trim();
   const newPass = getElement("sPass").value;
   const users = getUsers();
+
 
   if (!newUser || newPass.length < 4) {
     alert("Username and password (min 4 chars) required");
@@ -106,41 +118,42 @@ function doSignup() {
     return;
   }
 
+
   users[newUser] = { password: newPass, role: "user" };
   localStorage.setItem("users", JSON.stringify(users));
   alert("Account created! Please login.");
   switchTab("login");
 }
 
+
 function logout() {
+  currentUser = null;
   localStorage.removeItem("currentUser");
-  window.location.href = "login.html";
+  getElement("appShell").style.display = "none";
+  getElement("loginPage").style.display = "flex";
 }
 
-// ==================== ADMIN (Vanilla Modal) ====================
+
+// ==================== ADMIN ====================
 function showAdminPanel() {
-  if (!currentUser) {
-    const saved = localStorage.getItem("currentUser");
-    if (saved) currentUser = JSON.parse(saved);
-  }
-  if (currentUser?.role !== "admin") return;
-  
-  // Set checkbox states
+  if (currentUser.role !== "admin") return;
+  const modal = new bootstrap.Modal(getElement("adminModal"));
   getElement("toggleTrending").checked = adminSettings.showTrending;
   getElement("toggleTopRated").checked = adminSettings.showTopRated;
   getElement("toggleUpcoming").checked = adminSettings.showUpcoming;
-  
-  openModal('adminModal');
+  modal.show();
 }
+
 
 function applyAdminSettings() {
   adminSettings.showTrending = getElement("toggleTrending").checked;
   adminSettings.showTopRated = getElement("toggleTopRated").checked;
   adminSettings.showUpcoming = getElement("toggleUpcoming").checked;
   localStorage.setItem("adminSettings", JSON.stringify(adminSettings));
-  closeModal('adminModal');
-  window.location.href = "home.html";
+  bootstrap.Modal.getInstance(getElement("adminModal")).hide();
+  showHome();
 }
+
 
 // ==================== MOVIE GRID ====================
 function createMovieGrid(movies) {
@@ -164,50 +177,52 @@ function createMovieGrid(movies) {
   return html;
 }
 
-// ==================== HOME PAGE ====================
-async function showHome() {
-  if (!currentUser) {
-    const saved = localStorage.getItem("currentUser");
-    if (saved) currentUser = JSON.parse(saved);
-  }
-  if (currentUser?.role === "admin") {
-    const saved = localStorage.getItem("adminSettings");
-    if (saved) adminSettings = JSON.parse(saved);
-  }
 
+// ==================== HOME (Indian movies only, with Mollywood) ====================
+async function showHome() {
   const main = getElement("mainContent");
   main.innerHTML = `<div class="hero"><h1>DISCOVER <span>INDIAN</span> CINEMA</h1><p>Bollywood · Tollywood · Kollywood · Mollywood</p></div><div class="container">${showLoader()}</div>`;
 
+
+  let html = `<div class="hero"><h1>DISCOVER <span>INDIAN</span> CINEMA</h1><p>Bollywood · Tollywood · Kollywood · Mollywood</p></div><div class="container">`;
+  
   const today = new Date().toISOString().slice(0,10);
   const indiaParams = { with_origin_country: "IN", region: "IN" };
-  let html = `<div class="hero"><h1>DISCOVER <span>INDIAN</span> CINEMA</h1><p>Bollywood · Tollywood · Kollywood · Mollywood</p></div><div class="container">`;
 
+
+  let promises = {};
   if (adminSettings.showTrending) {
-    const trend = await fetchData("/discover/movie", { sort_by: "popularity.desc", ...indiaParams });
-    html += `<div class="section-title"><span>🔥 Trending in India</span></div>${createMovieGrid(trend?.results || [])}`;
+    promises.trending = fetchData("/discover/movie", { sort_by: "popularity.desc", ...indiaParams });
   }
   if (adminSettings.showTopRated) {
-    const top = await fetchData("/discover/movie", { sort_by: "vote_average.desc", vote_count_gte: 50, ...indiaParams });
-    html += `<div class="section-title"><span>⭐ Top Rated Indian Movies</span></div>${createMovieGrid(top?.results || [])}`;
+    promises.topRated = fetchData("/discover/movie", { sort_by: "vote_average.desc", "vote_count.gte": 50, ...indiaParams });
   }
   if (adminSettings.showUpcoming) {
-    const up = await fetchData("/discover/movie", { sort_by: "release_date.asc", "primary_release_date.gte": today, ...indiaParams });
-    html += `<div class="section-title"><span>📅 Upcoming Indian Releases</span></div>${createMovieGrid(up?.results || [])}`;
+    promises.upcoming = fetchData("/discover/movie", { sort_by: "release_date.asc", "primary_release_date.gte": today, ...indiaParams });
   }
+  
+  const results = await Promise.all(Object.values(promises));
+  const keys = Object.keys(promises);
+  
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const data = results[i];
+    if (key === 'trending') html += `<div class="section-title"><span>🔥 Trending in India</span></div>${createMovieGrid(data?.results || [])}`;
+    else if (key === 'topRated') html += `<div class="section-title"><span>⭐ Top Rated Indian Movies</span></div>${createMovieGrid(data?.results || [])}`;
+    else if (key === 'upcoming') html += `<div class="section-title"><span>📅 Upcoming Indian Releases</span></div>${createMovieGrid(data?.results || [])}`;
+  }
+  
   if (!adminSettings.showTrending && !adminSettings.showTopRated && !adminSettings.showUpcoming) {
     html += `<div class="empty-state">Admin has hidden all sections. Go to Admin panel to enable.</div>`;
   }
-  main.innerHTML = html + `</div>`;
+  
+  html += `</div>`;
+  main.innerHTML = html;
 }
 
-// ==================== GENRES ====================
-async function showGenres() {
-  if (!currentUser) {
-    const saved = localStorage.getItem("currentUser");
-    if (saved) currentUser = JSON.parse(saved);
-  }
-  const genreData = await fetchData("/genre/movie/list", { language: "en-US" });
-  genreList = (genreData?.genres?.length) ? genreData.genres : fallbackGenres;
+
+// ==================== GENRES (Indian only) ====================
+function showGenres() {
   let buttons = '';
   for (const genre of genreList) {
     buttons += `<div class="genre-card" onclick="loadGenreMovies(${genre.id}, '${genre.name}')">${genre.name}</div>`;
@@ -223,12 +238,14 @@ async function showGenres() {
   `;
 }
 
+
 async function loadGenreMovies(genreId, genreName) {
   const resultDiv = getElement("genreResult");
   resultDiv.innerHTML = showLoader();
   const data = await fetchData("/discover/movie", { with_genres: genreId, sort_by: "popularity.desc", with_origin_country: "IN", region: "IN" });
   resultDiv.innerHTML = `<div class="section-title"><span>🎬 ${genreName} (Indian)</span></div>${createMovieGrid(data?.results || [])}`;
 }
+
 
 // ==================== SEARCH ====================
 async function searchMovie() {
@@ -240,19 +257,15 @@ async function searchMovie() {
   main.innerHTML = `<div class="container"><div class="section-title"><span>🔍 "${query}" (Indian results)</span></div>${createMovieGrid(results?.results || [])}</div>`;
 }
 
+
 // ==================== FAVORITES ====================
 async function showFav() {
-  if (!currentUser) {
-    const saved = localStorage.getItem("currentUser");
-    if (saved) currentUser = JSON.parse(saved);
-  }
-  favorites = JSON.parse(localStorage.getItem(`favs_${currentUser?.name}`) || "[]");
   if (favorites.length === 0) {
     getElement("mainContent").innerHTML = `
       <div class="container" style="text-align:center; padding:80px 20px;">
         <i class="bi bi-heart-broken" style="font-size:60px; color:#3a3a3a;"></i>
         <h3 style="margin:18px 0;">No favorites yet</h3>
-        <button class="btn-red" style="width:auto; padding:10px 30px;" onclick="location.href='home.html'">Browse Movies</button>
+        <button class="btn-red" style="width:auto; padding:10px 30px;" onclick="showHome()">Browse Movies</button>
       </div>
     `;
     return;
@@ -271,18 +284,24 @@ async function showFav() {
   `;
 }
 
+
 function toggleFavorite(movieId) {
   const index = favorites.indexOf(movieId);
-  if (index === -1) favorites.push(movieId);
-  else favorites.splice(index, 1);
+  if (index === -1) {
+    favorites.push(movieId);
+    alert("Added to favorites! ❤️");
+  } else {
+    favorites.splice(index, 1);
+    alert("Removed from favorites");
+  }
   localStorage.setItem(`favs_${currentUser.name}`, JSON.stringify(favorites));
-  alert(index === -1 ? "Added to favorites! ❤️" : "Removed from favorites");
   showMovieDetail(movieId);
 }
 
-// ==================== MOVIE DETAIL (Vanilla Modal) ====================
+
+// ==================== MOVIE DETAIL (vanilla modal) ====================
 async function showMovieDetail(movieId) {
-  openModal('movieModal');
+  openModal();
   const modalBody = getElement("modalBody");
   modalBody.innerHTML = showLoader();
   const movie = await fetchData(`/movie/${movieId}`);
@@ -304,6 +323,7 @@ async function showMovieDetail(movieId) {
   `;
 }
 
+
 // ==================== CONTACT PAGE ====================
 function showContact() {
   getElement("mainContent").innerHTML = `
@@ -321,6 +341,7 @@ function showContact() {
     </div>
   `;
 }
+
 
 // ==================== ABOUT PAGE ====================
 function showAbout() {
@@ -347,4 +368,32 @@ function showAbout() {
       </div>
     </div>
   `;
+}
+
+
+// ==================== START ====================
+async function startApp() {
+  if (currentUser.role === "admin") {
+    getElement("adminNavBtn").style.display = "inline-block";
+  } else {
+    getElement("adminNavBtn").style.display = "none";
+  }
+  const genreData = await fetchData("/genre/movie/list", { language: "en-US" });
+  genreList = (genreData?.genres && genreData.genres.length) ? genreData.genres : fallbackGenres;
+  showHome();
+}
+
+
+// Check saved user session
+const savedUser = localStorage.getItem("currentUser");
+if (savedUser) {
+  currentUser = JSON.parse(savedUser);
+  favorites = JSON.parse(localStorage.getItem(`favs_${currentUser.name}`) || "[]");
+  if (currentUser.role === "admin") {
+    const savedSettings = localStorage.getItem("adminSettings");
+    if (savedSettings) adminSettings = JSON.parse(savedSettings);
+  }
+  getElement("loginPage").style.display = "none";
+  getElement("appShell").style.display = "block";
+  startApp();
 }
